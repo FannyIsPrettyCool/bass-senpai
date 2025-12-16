@@ -32,7 +32,10 @@ class TerminalUI:
         """Update terminal dimensions and calculate layout sizes."""
         self.term_width = self._get_terminal_width()
         self.term_height = self._get_terminal_height()
-        
+        self._calculate_artwork_size()
+    
+    def _calculate_artwork_size(self):
+        """Calculate artwork dimensions based on current terminal size."""
         # Calculate artwork dimensions based on terminal size
         # For small terminals (< 80 cols), use smaller artwork
         if self.term_width < 80:
