@@ -110,6 +110,28 @@ class TestTerminalUI(unittest.TestCase):
         self.assertIsInstance(result, str)
         self.assertIn('Test Artist', result)
         self.assertIn('Test Title', result)
+    
+    def test_dynamic_artwork_sizing(self):
+        """Test that artwork size adapts to terminal width."""
+        ui = TerminalUI()
+        
+        # Test small terminal
+        ui.term_width = 60
+        ui._calculate_artwork_size()
+        self.assertEqual(ui.artwork_width, 20)
+        self.assertEqual(ui.artwork_height, 10)
+        
+        # Test medium terminal
+        ui.term_width = 100
+        ui._calculate_artwork_size()
+        self.assertEqual(ui.artwork_width, 30)
+        self.assertEqual(ui.artwork_height, 15)
+        
+        # Test large terminal
+        ui.term_width = 140
+        ui._calculate_artwork_size()
+        self.assertEqual(ui.artwork_width, 40)
+        self.assertEqual(ui.artwork_height, 20)
 
 
 if __name__ == '__main__':

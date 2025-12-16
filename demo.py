@@ -26,17 +26,18 @@ def main():
     print("="*80 + "\n")
     
     # Render track info
-    artwork_width = 42  # 40 char width + 2 for padding
+    ui._update_dimensions()
+    artwork_width = ui.artwork_width + 2
     left_panel = ui.render_track_info(metadata, artwork_width)
     
     # Render placeholder artwork (no actual image)
-    right_panel = artwork._render_placeholder(40, 20)
+    right_panel = artwork._render_placeholder(ui.artwork_width, ui.artwork_height)
     
     # Combine panels
     combined = ui.render_split_layout(left_panel, right_panel)
     
     # Add header
-    header = "\n  \x1b[1m\x1b[35mbass-senpai\x1b[0m\n  \x1b[90m" + "─" * ui.term_width + "\x1b[0m"
+    header = "  \x1b[1m\x1b[35m♫ bass-senpai ♫\x1b[0m\n  \x1b[90m" + "─" * ui.term_width + "\x1b[0m"
     full_output = header + '\n\n' + combined
     
     print(full_output)
