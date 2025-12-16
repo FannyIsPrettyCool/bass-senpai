@@ -36,11 +36,7 @@ def main():
     # Combine panels
     combined = ui.render_split_layout(left_panel, right_panel)
     
-    # Add header
-    header = "  \x1b[1m\x1b[35m♫ bass-senpai ♫\x1b[0m\n  \x1b[90m" + "─" * ui.term_width + "\x1b[0m"
-    full_output = header + '\n\n' + combined
-    
-    print(full_output)
+    print(combined)
     
     print("\n" + "="*80)
     print("This is how bass-senpai displays track information.")

@@ -104,12 +104,8 @@ class BassSenpai:
         # Combine panels
         combined = self.ui.render_split_layout(left_panel, right_panel)
         
-        # Add header
-        header = self._render_header()
-        full_output = header + '\n\n' + combined
-        
         # Display
-        self.ui.display(full_output)
+        self.ui.display(combined)
     
     def _render_header(self) -> str:
         """Render application header."""
