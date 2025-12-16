@@ -26,7 +26,6 @@ private:
     
     void update();
     std::string get_track_id(const std::optional<TrackMetadata>& metadata);
-    void signal_handler(int signum);
     
     static BassSenpai* instance_;
 };

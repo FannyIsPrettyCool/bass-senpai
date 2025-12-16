@@ -24,16 +24,17 @@ bool MPRISClient::check_playerctl() {
 
 std::string MPRISClient::execute_command(const std::vector<std::string>& args) {
     // Build command string with proper escaping
-    std::string cmd;
+    std::stringstream cmd_stream;
     for (size_t i = 0; i < args.size(); ++i) {
-        if (i > 0) cmd += " ";
+        if (i > 0) cmd_stream << " ";
         
+        const std::string& arg = args[i];
         // Escape single quotes in the argument
-        std::string arg = args[i];
         if (arg.find('\'') != std::string::npos || arg.find('{') != std::string::npos || 
             arg.find(' ') != std::string::npos) {
             // Use single quotes and escape any single quotes in the string
             std::string escaped;
+            escaped.reserve(arg.length() + 10);  // Reserve space for escaping
             for (char c : arg) {
                 if (c == '\'') {
                     escaped += "'\\''";
@@ -41,12 +42,13 @@ std::string MPRISClient::execute_command(const std::vector<std::string>& args) {
                     escaped += c;
                 }
             }
-            cmd += "'" + escaped + "'";
+            cmd_stream << "'" << escaped << "'";
         } else {
-            cmd += arg;
+            cmd_stream << arg;
         }
     }
-    cmd += " 2>/dev/null";
+    cmd_stream << " 2>/dev/null";
+    std::string cmd = cmd_stream.str();
     
     // Execute command
     std::array<char, 128> buffer;

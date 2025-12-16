@@ -6,6 +6,16 @@
 
 namespace bass_senpai {
 
+// Global pointer for signal handling (signal handlers must be C-style functions)
+static std::atomic<bool>* g_running = nullptr;
+
+// Signal handler function
+static void signal_handler(int) {
+    if (g_running) {
+        g_running->store(false);
+    }
+}
+
 BassSenpai* BassSenpai::instance_ = nullptr;
 
 BassSenpai::BassSenpai(double update_interval)
@@ -16,17 +26,15 @@ BassSenpai::BassSenpai(double update_interval)
     , running_(false)
 {
     instance_ = this;
+    g_running = &running_;
     
     // Set up signal handlers for graceful shutdown
-    std::signal(SIGINT, [](int) { 
-        if (instance_) instance_->stop(); 
-    });
-    std::signal(SIGTERM, [](int) { 
-        if (instance_) instance_->stop(); 
-    });
+    std::signal(SIGINT, signal_handler);
+    std::signal(SIGTERM, signal_handler);
 }
 
 BassSenpai::~BassSenpai() {
+    g_running = nullptr;
     instance_ = nullptr;
 }
 
