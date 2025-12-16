@@ -5,7 +5,7 @@ import re
 from typing import Optional, Dict, Any, List
 
 # Constants
-ARTWORK_BORDER_HEIGHT = 2  # Top and bottom borders for artwork
+ARTWORK_BORDER_HEIGHT = 2  # Total height for top and bottom borders combined
 
 
 class TerminalUI:
