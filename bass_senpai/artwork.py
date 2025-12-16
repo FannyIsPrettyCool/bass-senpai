@@ -143,9 +143,12 @@ class ArtworkHandler:
             pixels = img.load()
             output = []
             
+            # Top border
+            output.append('╔' + '═' * width + '╗')
+            
             # Use half-block characters for better resolution
             for y in range(0, height * 2, 2):
-                line = []
+                line = ['║']  # Left border
                 for x in range(width):
                     # Get upper and lower pixel colors
                     r1, g1, b1 = pixels[x, y]
@@ -155,7 +158,11 @@ class ArtworkHandler:
                     # Top half is foreground, bottom half is background
                     line.append(f"\x1b[38;2;{r1};{g1};{b1}m\x1b[48;2;{r2};{g2};{b2}m▀\x1b[0m")
                 
+                line.append('║')  # Right border
                 output.append(''.join(line))
+            
+            # Bottom border
+            output.append('╚' + '═' * width + '╝')
             
             return '\n'.join(output)
         
@@ -181,11 +188,21 @@ class ArtworkHandler:
     def _render_placeholder(self, width: int = 40, height: int = 20) -> str:
         """Render a placeholder when no artwork is available."""
         lines = []
+        
+        # Top border
+        lines.append('╔' + '═' * width + '╗')
+        
+        # Middle lines with vertical borders
         for y in range(height):
             if y == height // 2:
                 text = "No Artwork"
                 padding = (width - len(text)) // 2
-                lines.append(' ' * padding + text + ' ' * (width - padding - len(text)))
+                content = ' ' * padding + text + ' ' * (width - padding - len(text))
+                lines.append('║' + content + '║')
             else:
-                lines.append(' ' * width)
+                lines.append('║' + ' ' * width + '║')
+        
+        # Bottom border
+        lines.append('╚' + '═' * width + '╝')
+        
         return '\n'.join(lines)

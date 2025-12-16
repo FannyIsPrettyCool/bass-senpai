@@ -77,6 +77,9 @@ class BassSenpai:
     
     def _update(self):
         """Update display with current track information."""
+        # Update dimensions dynamically
+        self.ui._update_dimensions()
+        
         # Get current metadata
         metadata = self.mpris.get_metadata()
         
@@ -87,15 +90,15 @@ class BassSenpai:
         if track_changed:
             self.last_track_id = track_id
         
-        # Render right panel (artwork)
-        art_url = metadata.get('art_url') if metadata else None
-        artwork_height = 20
-        artwork_width = 40
+        # Get dynamic artwork dimensions
+        artwork_height = self.ui.artwork_height
+        artwork_width = self.ui.artwork_width
         
         # Render left panel (track info)
         left_panel = self.ui.render_track_info(metadata, artwork_width + 2)
         
-        # Only update artwork if track changed or no artwork cached
+        # Render right panel (artwork)
+        art_url = metadata.get('art_url') if metadata else None
         right_panel = self.artwork.render(art_url, artwork_width, artwork_height)
         
         # Combine panels
@@ -110,13 +113,15 @@ class BassSenpai:
     
     def _render_header(self) -> str:
         """Render application header."""
-        title = "bass-senpai"
+        # Decorative header with music-themed elements
+        title = "♫ bass-senpai ♫"
         # Stylized title with colors
         styled_title = f"\x1b[1m\x1b[35m{title}\x1b[0m"
         
+        # Decorative separator with alternating characters
         separator = '─' * self.ui.term_width
         
-        return f"\n  {styled_title}\n  \x1b[90m{separator}\x1b[0m"
+        return f"  {styled_title}\n  \x1b[90m{separator}\x1b[0m"
 
 
 def main():

@@ -12,6 +12,7 @@ class TerminalUI:
         self.term_width = self._get_terminal_width()
         self.term_height = self._get_terminal_height()
         self.last_output = None
+        self._update_dimensions()
     
     def _get_terminal_width(self) -> int:
         """Get terminal width."""
@@ -26,6 +27,23 @@ class TerminalUI:
             return os.get_terminal_size().lines
         except OSError:
             return 30  # Default fallback
+    
+    def _update_dimensions(self):
+        """Update terminal dimensions and calculate layout sizes."""
+        self.term_width = self._get_terminal_width()
+        self.term_height = self._get_terminal_height()
+        
+        # Calculate artwork dimensions based on terminal size
+        # For small terminals (< 80 cols), use smaller artwork
+        if self.term_width < 80:
+            self.artwork_width = 20
+            self.artwork_height = 10
+        elif self.term_width < 120:
+            self.artwork_width = 30
+            self.artwork_height = 15
+        else:
+            self.artwork_width = 40
+            self.artwork_height = 20
     
     def clear_screen(self):
         """Clear the terminal screen."""
@@ -73,6 +91,9 @@ class TerminalUI:
     
     def render_track_info(self, metadata: Optional[Dict[str, Any]], artwork_width: int = 42) -> str:
         """Render track information panel."""
+        # Update dimensions dynamically
+        self._update_dimensions()
+        
         if not metadata:
             return self._render_no_player(artwork_width)
         
@@ -92,16 +113,19 @@ class TerminalUI:
         lines.append('')
         lines.append('')
         
-        # Title (bold and colored)
-        lines.append(f"  \x1b[1m\x1b[35m{self._truncate(title, left_width - 4)}\x1b[0m")
+        # Title (bold and colored) with decorative elements
+        title_text = self._truncate(title, left_width - 8)
+        lines.append(f"  ♪ \x1b[1m\x1b[35m{title_text}\x1b[0m")
         lines.append('')
         
-        # Artist
-        lines.append(f"  \x1b[36m{self._truncate(artist, left_width - 4)}\x1b[0m")
+        # Artist with icon
+        artist_text = self._truncate(artist, left_width - 8)
+        lines.append(f"  👤 \x1b[36m{artist_text}\x1b[0m")
         lines.append('')
         
-        # Album
-        lines.append(f"  \x1b[90m{self._truncate(album, left_width - 4)}\x1b[0m")
+        # Album with icon
+        album_text = self._truncate(album, left_width - 8)
+        lines.append(f"  💿 \x1b[90m{album_text}\x1b[0m")
         lines.append('')
         lines.append('')
         
@@ -177,9 +201,9 @@ class TerminalUI:
         while len(right_lines) < max_height:
             right_lines.append('')
         
-        # Calculate widths
-        # Right panel should be fixed width for artwork
-        artwork_width = 42  # For ~40 char wide artwork plus padding
+        # Calculate widths dynamically
+        # Right panel width based on artwork width plus padding
+        artwork_width = self.artwork_width + 2
         left_width = self.term_width - artwork_width - 2
         
         output = []
