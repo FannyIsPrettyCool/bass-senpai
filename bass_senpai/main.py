@@ -107,17 +107,6 @@ class BassSenpai:
         # Display
         self.ui.display(combined)
     
-    def _render_header(self) -> str:
-        """Render application header."""
-        # Decorative header with music-themed elements
-        title = "♫ bass-senpai ♫"
-        # Stylized title with colors
-        styled_title = f"\x1b[1m\x1b[35m{title}\x1b[0m"
-        
-        # Decorative separator with alternating characters
-        separator = '─' * self.ui.term_width
-        
-        return f"  {styled_title}\n  \x1b[90m{separator}\x1b[0m"
 
 
 def main():
