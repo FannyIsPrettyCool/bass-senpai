@@ -2,7 +2,10 @@
 import sys
 import os
 import re
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+
+# Constants
+ARTWORK_BORDER_HEIGHT = 2  # Total height for top and bottom borders combined
 
 
 class TerminalUI:
@@ -93,6 +96,35 @@ class TerminalUI:
         
         return colored_bar
     
+    def _center_content_vertically(self, content_lines: List[str]) -> str:
+        """Center content vertically to match artwork height.
+        
+        Args:
+            content_lines: List of content lines to center
+            
+        Returns:
+            Vertically centered content as a single string
+        """
+        # Calculate vertical centering to match artwork height
+        # Artwork has artwork_height + ARTWORK_BORDER_HEIGHT total lines
+        target_height = self.artwork_height + ARTWORK_BORDER_HEIGHT
+        content_height = len(content_lines)
+        
+        # Calculate padding needed to center content
+        total_padding = max(0, target_height - content_height)
+        top_padding = total_padding // 2
+        bottom_padding = total_padding - top_padding
+        
+        # Build final lines with vertical centering
+        lines = []
+        for _ in range(top_padding):
+            lines.append('')
+        lines.extend(content_lines)
+        for _ in range(bottom_padding):
+            lines.append('')
+        
+        return '\n'.join(lines)
+    
     def render_track_info(self, metadata: Optional[Dict[str, Any]], artwork_width: int = 42) -> str:
         """Render track information panel."""
         if not metadata:
@@ -108,63 +140,59 @@ class TerminalUI:
         # Calculate left panel width
         left_width = self.term_width - artwork_width - 4
         
-        lines = []
-        
-        # Add some vertical spacing
-        lines.append('')
-        lines.append('')
+        # Build content lines (without vertical padding)
+        content_lines = []
         
         # Title (bold and colored) with decorative elements
         title_text = self._truncate(title, left_width - 8)
-        lines.append(f"  ♪ \x1b[1m\x1b[35m{title_text}\x1b[0m")
-        lines.append('')
+        content_lines.append(f"  ♪ \x1b[1m\x1b[35m{title_text}\x1b[0m")
+        content_lines.append('')
         
         # Artist with icon
         artist_text = self._truncate(artist, left_width - 8)
-        lines.append(f"  👤 \x1b[36m{artist_text}\x1b[0m")
-        lines.append('')
+        content_lines.append(f"  👤 \x1b[36m{artist_text}\x1b[0m")
+        content_lines.append('')
         
         # Album with icon
         album_text = self._truncate(album, left_width - 8)
-        lines.append(f"  💿 \x1b[90m{album_text}\x1b[0m")
-        lines.append('')
-        lines.append('')
+        content_lines.append(f"  💿 \x1b[90m{album_text}\x1b[0m")
+        content_lines.append('')
+        content_lines.append('')
         
         # Status with icon
         status_icon = self._get_status_icon(status)
         status_color = self._get_status_color(status)
-        lines.append(f"  {status_color}{status_icon} {status}\x1b[0m")
-        lines.append('')
-        lines.append('')
+        content_lines.append(f"  {status_color}{status_icon} {status}\x1b[0m")
+        content_lines.append('')
+        content_lines.append('')
         
         # Progress bar
         bar_width = min(50, left_width - 4)
         progress_bar = self.create_progress_bar(position, length, bar_width)
-        lines.append(f"  {progress_bar}")
-        lines.append('')
+        content_lines.append(f"  {progress_bar}")
+        content_lines.append('')
         
         # Time stamps
         current_time = self.format_time(position)
         total_time = self.format_time(length)
         time_str = f"{current_time} / {total_time}"
-        lines.append(f"  \x1b[90m{time_str}\x1b[0m")
+        content_lines.append(f"  \x1b[90m{time_str}\x1b[0m")
         
-        return '\n'.join(lines)
+        # Center content vertically to match artwork height
+        return self._center_content_vertically(content_lines)
     
     def _render_no_player(self, artwork_width: int) -> str:
         """Render message when no player is active."""
         left_width = self.term_width - artwork_width - 4
         
-        lines = []
-        lines.append('')
-        lines.append('')
-        lines.append('')
-        lines.append('')
-        lines.append(f"  \x1b[90mNo active media player found\x1b[0m")
-        lines.append('')
-        lines.append(f"  \x1b[90mStart playing music and run bass-senpai again\x1b[0m")
+        # Build content lines
+        content_lines = []
+        content_lines.append(f"  \x1b[90mNo active media player found\x1b[0m")
+        content_lines.append('')
+        content_lines.append(f"  \x1b[90mStart playing music and run bass-senpai again\x1b[0m")
         
-        return '\n'.join(lines)
+        # Center content vertically to match artwork height
+        return self._center_content_vertically(content_lines)
     
     def _get_status_icon(self, status: str) -> str:
         """Get icon for playback status."""

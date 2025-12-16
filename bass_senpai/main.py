@@ -104,24 +104,9 @@ class BassSenpai:
         # Combine panels
         combined = self.ui.render_split_layout(left_panel, right_panel)
         
-        # Add header
-        header = self._render_header()
-        full_output = header + '\n\n' + combined
-        
         # Display
-        self.ui.display(full_output)
+        self.ui.display(combined)
     
-    def _render_header(self) -> str:
-        """Render application header."""
-        # Decorative header with music-themed elements
-        title = "♫ bass-senpai ♫"
-        # Stylized title with colors
-        styled_title = f"\x1b[1m\x1b[35m{title}\x1b[0m"
-        
-        # Decorative separator with alternating characters
-        separator = '─' * self.ui.term_width
-        
-        return f"  {styled_title}\n  \x1b[90m{separator}\x1b[0m"
 
 
 def main():
