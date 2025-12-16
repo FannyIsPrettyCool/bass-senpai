@@ -12,7 +12,8 @@ class TerminalUI:
         self.term_width = self._get_terminal_width()
         self.term_height = self._get_terminal_height()
         self.last_output = None
-        self._update_dimensions()
+        # Calculate initial artwork size
+        self._calculate_artwork_size()
     
     def _get_terminal_width(self) -> int:
         """Get terminal width."""
@@ -94,9 +95,6 @@ class TerminalUI:
     
     def render_track_info(self, metadata: Optional[Dict[str, Any]], artwork_width: int = 42) -> str:
         """Render track information panel."""
-        # Update dimensions dynamically
-        self._update_dimensions()
-        
         if not metadata:
             return self._render_no_player(artwork_width)
         
