@@ -2,7 +2,10 @@
 import sys
 import os
 import re
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+
+# Constants
+ARTWORK_BORDER_HEIGHT = 2  # Top and bottom borders for artwork
 
 
 class TerminalUI:
@@ -93,6 +96,35 @@ class TerminalUI:
         
         return colored_bar
     
+    def _center_content_vertically(self, content_lines: List[str]) -> str:
+        """Center content vertically to match artwork height.
+        
+        Args:
+            content_lines: List of content lines to center
+            
+        Returns:
+            Vertically centered content as a single string
+        """
+        # Calculate vertical centering to match artwork height
+        # Artwork has artwork_height + ARTWORK_BORDER_HEIGHT total lines
+        target_height = self.artwork_height + ARTWORK_BORDER_HEIGHT
+        content_height = len(content_lines)
+        
+        # Calculate padding needed to center content
+        total_padding = max(0, target_height - content_height)
+        top_padding = total_padding // 2
+        bottom_padding = total_padding - top_padding
+        
+        # Build final lines with vertical centering
+        lines = []
+        for _ in range(top_padding):
+            lines.append('')
+        lines.extend(content_lines)
+        for _ in range(bottom_padding):
+            lines.append('')
+        
+        return '\n'.join(lines)
+    
     def render_track_info(self, metadata: Optional[Dict[str, Any]], artwork_width: int = 42) -> str:
         """Render track information panel."""
         if not metadata:
@@ -146,25 +178,8 @@ class TerminalUI:
         time_str = f"{current_time} / {total_time}"
         content_lines.append(f"  \x1b[90m{time_str}\x1b[0m")
         
-        # Calculate vertical centering to match artwork height
-        # Artwork has artwork_height + 2 (for borders) total lines
-        target_height = self.artwork_height + 2
-        content_height = len(content_lines)
-        
-        # Calculate padding needed to center content
-        total_padding = max(0, target_height - content_height)
-        top_padding = total_padding // 2
-        bottom_padding = total_padding - top_padding
-        
-        # Build final lines with vertical centering
-        lines = []
-        for _ in range(top_padding):
-            lines.append('')
-        lines.extend(content_lines)
-        for _ in range(bottom_padding):
-            lines.append('')
-        
-        return '\n'.join(lines)
+        # Center content vertically to match artwork height
+        return self._center_content_vertically(content_lines)
     
     def _render_no_player(self, artwork_width: int) -> str:
         """Render message when no player is active."""
@@ -176,24 +191,8 @@ class TerminalUI:
         content_lines.append('')
         content_lines.append(f"  \x1b[90mStart playing music and run bass-senpai again\x1b[0m")
         
-        # Calculate vertical centering to match artwork height
-        target_height = self.artwork_height + 2
-        content_height = len(content_lines)
-        
-        # Calculate padding needed to center content
-        total_padding = max(0, target_height - content_height)
-        top_padding = total_padding // 2
-        bottom_padding = total_padding - top_padding
-        
-        # Build final lines with vertical centering
-        lines = []
-        for _ in range(top_padding):
-            lines.append('')
-        lines.extend(content_lines)
-        for _ in range(bottom_padding):
-            lines.append('')
-        
-        return '\n'.join(lines)
+        # Center content vertically to match artwork height
+        return self._center_content_vertically(content_lines)
     
     def _get_status_icon(self, status: str) -> str:
         """Get icon for playback status."""
