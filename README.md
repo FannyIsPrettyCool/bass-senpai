@@ -3,7 +3,7 @@
 A stylized terminal music status viewer that displays currently playing tracks with album artwork. Designed to be beautiful, responsive, and lightweight.
 
 ![bass-senpai demo](https://img.shields.io/badge/Status-Active-green)
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+![C++](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## ✨ Features
@@ -25,7 +25,9 @@ A stylized terminal music status viewer that displays currently playing tracks w
 
 ## 📋 Requirements
 
-- **Python 3.8 or higher**
+- **C++ compiler** with C++17 support (GCC 8+, Clang 7+, or MSVC 2019+)
+- **CMake** 3.15 or higher
+- **libcurl** - for HTTP downloads
 - **playerctl** - for MPRIS integration with media players
 - A running media player that supports MPRIS (Spotify, VLC, Rhythmbox, Clementine, etc.)
 
@@ -51,33 +53,58 @@ sudo dnf install playerctl
 brew install playerctl
 ```
 
+### Installing Build Dependencies
+
+**Ubuntu/Debian:**
+```bash
+sudo apt install cmake g++ libcurl4-openssl-dev
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S cmake gcc curl
+```
+
+**Fedora:**
+```bash
+sudo dnf install cmake gcc-c++ libcurl-devel
+```
+
+**macOS:**
+```bash
+brew install cmake curl
+```
+
 ## 🚀 Installation
 
-### Option 1: Install with pip (Recommended)
+### Building from Source
 
-1. Clone this repository:
+1. Install dependencies (see Requirements section above)
+
+2. Clone this repository:
 ```bash
 git clone https://github.com/FannyIsPrettyCool/bass-senpai.git
 cd bass-senpai
 ```
 
-2. Install the package:
+3. Build the project:
 ```bash
-pip install -e .
+mkdir build && cd build
+cmake ..
+cmake --build . -j$(nproc)
 ```
 
-This will install bass-senpai and all its dependencies (Pillow, requests).
-
-### Option 2: Manual dependency installation
-
+4. Install (optional):
 ```bash
-pip install Pillow requests
+sudo cmake --install .
 ```
 
-Then run directly:
+Or run directly from the build directory:
 ```bash
-python -m bass_senpai.main
+./bass-senpai
 ```
+
+For detailed build instructions, see [BUILD.md](BUILD.md).
 
 ## 🎮 Usage
 
@@ -291,21 +318,22 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ```bash
 git clone https://github.com/FannyIsPrettyCool/bass-senpai.git
 cd bass-senpai
-pip install -e .
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build .
 ```
 
 ### Running Tests
 ```bash
-python -m pytest tests/
+# To be implemented
 ```
 
-### Running Demo
-```bash
-python demo.py
-```
+For more details, see [BUILD.md](BUILD.md)
 
 ## 🙏 Acknowledgments
 
 - Uses [playerctl](https://github.com/altdesktop/playerctl) for MPRIS integration
-- Kitty graphics protocol for pixel-perfect images
+- Uses [stb_image](https://github.com/nothings/stb) for image processing
+- Uses [nlohmann/json](https://github.com/nlohmann/json) for JSON parsing
+- Uses [libcurl](https://curl.se/libcurl/) for HTTP downloads
 - Inspired by various terminal music visualizers and players

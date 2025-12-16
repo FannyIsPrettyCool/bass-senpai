@@ -45,3 +45,17 @@ Thumbs.db
 # Test scripts (demo files)
 test_caching.py
 test_mpris.py
+
+# C++ build artifacts
+build/
+cmake-build-*/
+*.o
+*.a
+*.so
+*.dylib
+bass-senpai
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+_deps/
