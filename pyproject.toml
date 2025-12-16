@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bass-senpai"
+version = "1.0.0"
+description = "A small terminal music status viewer with album artwork preview"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "Pillow>=10.0.0",
+    "requests>=2.31.0",
+]
+
+[project.scripts]
+bass-senpai = "bass_senpai.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bass_senpai*"]
