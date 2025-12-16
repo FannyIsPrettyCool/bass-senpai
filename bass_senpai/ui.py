@@ -154,12 +154,15 @@ class TerminalUI:
         # Calculate padding needed to center content
         total_padding = max(0, target_height - content_height)
         top_padding = total_padding // 2
+        bottom_padding = total_padding - top_padding
         
         # Build final lines with vertical centering
         lines = []
         for _ in range(top_padding):
             lines.append('')
         lines.extend(content_lines)
+        for _ in range(bottom_padding):
+            lines.append('')
         
         return '\n'.join(lines)
     
@@ -180,12 +183,15 @@ class TerminalUI:
         # Calculate padding needed to center content
         total_padding = max(0, target_height - content_height)
         top_padding = total_padding // 2
+        bottom_padding = total_padding - top_padding
         
         # Build final lines with vertical centering
         lines = []
         for _ in range(top_padding):
             lines.append('')
         lines.extend(content_lines)
+        for _ in range(bottom_padding):
+            lines.append('')
         
         return '\n'.join(lines)
     
