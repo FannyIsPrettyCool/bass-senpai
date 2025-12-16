@@ -1,6 +1,7 @@
 """Terminal UI for bass-senpai."""
 import sys
 import os
+import re
 from typing import Optional, Dict, Any
 
 
@@ -200,7 +201,6 @@ class TerminalUI:
     
     def _strip_ansi(self, text: str) -> str:
         """Strip ANSI escape codes for length calculation."""
-        import re
         ansi_escape = re.compile(r'\x1b\[[0-9;]*[mGKHfJ]|\x1b_G[^\\]*\x1b\\')
         return ansi_escape.sub('', text)
     

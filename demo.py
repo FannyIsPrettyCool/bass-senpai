@@ -26,7 +26,8 @@ def main():
     print("="*80 + "\n")
     
     # Render track info
-    left_panel = ui.render_track_info(metadata)
+    artwork_width = 42  # 40 char width + 2 for padding
+    left_panel = ui.render_track_info(metadata, artwork_width)
     
     # Render placeholder artwork (no actual image)
     right_panel = artwork._render_placeholder(40, 20)

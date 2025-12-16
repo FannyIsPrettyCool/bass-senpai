@@ -87,13 +87,13 @@ class BassSenpai:
         if track_changed:
             self.last_track_id = track_id
         
-        # Render left panel (track info)
-        left_panel = self.ui.render_track_info(metadata)
-        
         # Render right panel (artwork)
         art_url = metadata.get('art_url') if metadata else None
         artwork_height = 20
         artwork_width = 40
+        
+        # Render left panel (track info)
+        left_panel = self.ui.render_track_info(metadata, artwork_width + 2)
         
         # Only update artwork if track changed or no artwork cached
         right_panel = self.artwork.render(art_url, artwork_width, artwork_height)
