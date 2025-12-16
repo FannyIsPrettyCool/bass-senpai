@@ -41,3 +41,7 @@ Thumbs.db
 # Cache
 .cache/
 *.log
+
+# Test scripts (demo files)
+test_caching.py
+test_mpris.py
