@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <regex>
 #include <algorithm>
+#include <cwchar>
+#include <clocale>
 
 namespace bass_senpai {
 
@@ -13,6 +15,8 @@ TerminalUI::TerminalUI()
     : term_width_(get_terminal_width())
     , term_height_(get_terminal_height())
 {
+    // Set locale for proper wide character handling
+    std::setlocale(LC_ALL, "");
     calculate_artwork_size();
 }
 
@@ -115,43 +119,61 @@ std::string TerminalUI::strip_ansi(const std::string& text) {
 }
 
 int TerminalUI::display_width(const std::string& text) {
-    // Calculate actual display width accounting for wide characters (emojis, etc.)
-    // This is a simplified implementation that works for the emojis used in this app.
-    // For production use, consider using wcwidth library for full Unicode support.
+    // Calculate actual display width using wcwidth for proper Unicode handling
     std::string clean_text = strip_ansi(text);
     
-    int width = 0;
+    int total_width = 0;
     size_t i = 0;
+    
     while (i < clean_text.size()) {
+        // Decode UTF-8 character
+        wchar_t wc;
+        int bytes = 1;
+        
         unsigned char c = clean_text[i];
         
-        // UTF-8 character width calculation
         if (c < 0x80) {
-            // ASCII character - 1 byte, 1 column
-            width += 1;
-            i += 1;
-        } else if ((c & 0xE0) == 0xC0) {
-            // 2-byte UTF-8 character - typically 1 column
-            width += 1;
-            i += 2;
-        } else if ((c & 0xF0) == 0xE0) {
-            // 3-byte UTF-8 character
-            // Box drawing chars (╔═╗║╚╝), music symbols (♪), playback (▶⏸⏹): 1 column
-            // This works for the symbols used in this app
-            width += 1;
-            i += 3;
-        } else if ((c & 0xF8) == 0xF0) {
-            // 4-byte UTF-8 character (most emoji: 👤💿)
-            // These are typically 2 columns wide
-            width += 2;
-            i += 4;
+            // ASCII - 1 byte
+            wc = c;
+            bytes = 1;
+        } else if ((c & 0xE0) == 0xC0 && i + 1 < clean_text.size()) {
+            // 2-byte UTF-8
+            wc = ((c & 0x1F) << 6) | (clean_text[i + 1] & 0x3F);
+            bytes = 2;
+        } else if ((c & 0xF0) == 0xE0 && i + 2 < clean_text.size()) {
+            // 3-byte UTF-8
+            wc = ((c & 0x0F) << 12) | 
+                 ((clean_text[i + 1] & 0x3F) << 6) | 
+                 (clean_text[i + 2] & 0x3F);
+            bytes = 3;
+        } else if ((c & 0xF8) == 0xF0 && i + 3 < clean_text.size()) {
+            // 4-byte UTF-8
+            wc = ((c & 0x07) << 18) | 
+                 ((clean_text[i + 1] & 0x3F) << 12) | 
+                 ((clean_text[i + 2] & 0x3F) << 6) | 
+                 (clean_text[i + 3] & 0x3F);
+            bytes = 4;
         } else {
-            // Invalid UTF-8 or continuation byte - skip
+            // Invalid UTF-8, skip
             i += 1;
+            continue;
         }
+        
+        // Use wcwidth to get the display width
+        int char_width = wcwidth(wc);
+        
+        // wcwidth returns -1 for non-printable characters, 0 for zero-width,
+        // 1 for normal width, and 2 for wide characters (CJK, emoji, etc.)
+        if (char_width < 0) {
+            // Non-printable or control character, treat as width 0
+            char_width = 0;
+        }
+        
+        total_width += char_width;
+        i += bytes;
     }
     
-    return width;
+    return total_width;
 }
 
 std::vector<std::string> TerminalUI::center_content_vertically(

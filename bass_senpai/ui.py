@@ -2,7 +2,7 @@
 import sys
 import os
 import re
-import unicodedata
+import wcwidth
 from typing import Optional, Dict, Any, List
 
 # Constants
@@ -260,24 +260,19 @@ class TerminalUI:
     def _display_width(self, text: str) -> int:
         """Calculate the actual display width of text, accounting for wide characters.
         
+        Uses wcwidth library for proper Unicode width calculation.
         Wide characters (like emojis) take 2 terminal columns.
         """
         # First strip ANSI codes
         clean_text = self._strip_ansi(text)
         
-        width = 0
-        for char in clean_text:
-            # Check if character is wide (emoji, CJK characters, etc.)
-            # East Asian Width property: 'F' (Fullwidth), 'W' (Wide)
-            ea_width = unicodedata.east_asian_width(char)
-            if ea_width in ('F', 'W'):
-                width += 2
-            # Emoji modifier and variation selectors are often zero-width
-            elif unicodedata.category(char) in ('Mn', 'Me', 'Cf'):
-                # Mark, Nonspacing; Mark, Enclosing; Other, Format
-                width += 0
-            else:
-                width += 1
+        # Use wcwidth to calculate display width
+        width = wcwidth.wcswidth(clean_text)
+        
+        # wcwidth returns -1 if the string contains non-printable characters
+        # In that case, fall back to character count
+        if width < 0:
+            width = len(clean_text)
         
         return width
     
