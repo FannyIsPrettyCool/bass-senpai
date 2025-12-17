@@ -46,6 +46,7 @@ private:
     std::string get_status_color(const std::string& status);
     std::string truncate(const std::string& text, int max_length);
     std::string strip_ansi(const std::string& text);
+    int display_width(const std::string& text);
     
     std::vector<std::string> center_content_vertically(
         const std::vector<std::string>& content_lines);

@@ -2,6 +2,7 @@
 import sys
 import os
 import re
+import wcwidth
 from typing import Optional, Dict, Any, List
 
 # Constants
@@ -237,12 +238,11 @@ class TerminalUI:
         
         output = []
         for left, right in zip(left_lines, right_lines):
-            # Strip ANSI codes for length calculation
-            left_visible = self._strip_ansi(left)
-            right_visible = self._strip_ansi(right)
+            # Calculate actual display width (accounting for wide characters like emojis)
+            left_visible_width = self._display_width(left)
             
             # Pad left to fill width
-            left_padding = left_width - len(left_visible)
+            left_padding = left_width - left_visible_width
             if left_padding > 0:
                 left_padded = left + ' ' * left_padding
             else:
@@ -256,6 +256,25 @@ class TerminalUI:
         """Strip ANSI escape codes for length calculation."""
         ansi_escape = re.compile(r'\x1b\[[0-9;]*[mGKHfJ]|\x1b_G[^\\]*\x1b\\')
         return ansi_escape.sub('', text)
+    
+    def _display_width(self, text: str) -> int:
+        """Calculate the actual display width of text, accounting for wide characters.
+        
+        Uses wcwidth library for proper Unicode width calculation.
+        Wide characters (like emojis) take 2 terminal columns.
+        """
+        # First strip ANSI codes
+        clean_text = self._strip_ansi(text)
+        
+        # Use wcwidth to calculate display width
+        width = wcwidth.wcswidth(clean_text)
+        
+        # wcwidth returns -1 if the string contains non-printable characters
+        # In that case, fall back to character count
+        if width < 0:
+            width = len(clean_text)
+        
+        return width
     
     def display(self, content: str):
         """Display content, replacing previous output efficiently."""

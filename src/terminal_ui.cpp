@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <regex>
 #include <algorithm>
+#include <cwchar>
+#include <clocale>
 
 namespace bass_senpai {
 
@@ -13,6 +15,8 @@ TerminalUI::TerminalUI()
     : term_width_(get_terminal_width())
     , term_height_(get_terminal_height())
 {
+    // Set locale for proper wide character handling
+    std::setlocale(LC_ALL, "");
     calculate_artwork_size();
 }
 
@@ -112,6 +116,109 @@ std::string TerminalUI::truncate(const std::string& text, int max_length) {
 std::string TerminalUI::strip_ansi(const std::string& text) {
     std::regex ansi_pattern("\x1b\\[[0-9;]*[mGKHfJ]|\x1b_G[^\\\\]*\x1b\\\\");
     return std::regex_replace(text, ansi_pattern, "");
+}
+
+int TerminalUI::display_width(const std::string& text) {
+    // Calculate actual display width using wcwidth for proper Unicode handling
+    std::string clean_text = strip_ansi(text);
+    
+    int total_width = 0;
+    size_t i = 0;
+    
+    while (i < clean_text.size()) {
+        // Decode UTF-8 character with validation
+        wchar_t wc;
+        int bytes = 1;
+        
+        unsigned char c = clean_text[i];
+        
+        if (c < 0x80) {
+            // ASCII - 1 byte
+            wc = c;
+            bytes = 1;
+        } else if ((c & 0xE0) == 0xC0 && i + 1 < clean_text.size()) {
+            // 2-byte UTF-8
+            unsigned char c2 = clean_text[i + 1];
+            
+            // Validate continuation byte
+            if ((c2 & 0xC0) != 0x80) {
+                i += 1;  // Invalid sequence, skip first byte
+                continue;
+            }
+            
+            wc = ((c & 0x1F) << 6) | (c2 & 0x3F);
+            
+            // Reject overlong encodings (2-byte sequences must encode >= 0x80)
+            if (wc < 0x80) {
+                i += 1;  // Invalid overlong sequence
+                continue;
+            }
+            
+            bytes = 2;
+        } else if ((c & 0xF0) == 0xE0 && i + 2 < clean_text.size()) {
+            // 3-byte UTF-8
+            unsigned char c2 = clean_text[i + 1];
+            unsigned char c3 = clean_text[i + 2];
+            
+            // Validate continuation bytes
+            if ((c2 & 0xC0) != 0x80 || (c3 & 0xC0) != 0x80) {
+                i += 1;  // Invalid sequence
+                continue;
+            }
+            
+            wc = ((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+            
+            // Reject overlong encodings (3-byte sequences must encode >= 0x800)
+            if (wc < 0x800) {
+                i += 1;  // Invalid overlong sequence
+                continue;
+            }
+            
+            bytes = 3;
+        } else if ((c & 0xF8) == 0xF0 && i + 3 < clean_text.size()) {
+            // 4-byte UTF-8
+            unsigned char c2 = clean_text[i + 1];
+            unsigned char c3 = clean_text[i + 2];
+            unsigned char c4 = clean_text[i + 3];
+            
+            // Validate continuation bytes
+            if ((c2 & 0xC0) != 0x80 || (c3 & 0xC0) != 0x80 || (c4 & 0xC0) != 0x80) {
+                i += 1;  // Invalid sequence
+                continue;
+            }
+            
+            wc = ((c & 0x07) << 18) | ((c2 & 0x3F) << 12) | 
+                 ((c3 & 0x3F) << 6) | (c4 & 0x3F);
+            
+            // Reject overlong encodings (4-byte sequences must encode >= 0x10000)
+            // Also reject values > 0x10FFFF (maximum valid Unicode)
+            if (wc < 0x10000 || wc > 0x10FFFF) {
+                i += 1;  // Invalid overlong or out-of-range sequence
+                continue;
+            }
+            
+            bytes = 4;
+        } else {
+            // Invalid UTF-8 start byte, skip
+            i += 1;
+            continue;
+        }
+        
+        // Use wcwidth to get the display width
+        int char_width = wcwidth(wc);
+        
+        // wcwidth returns -1 for non-printable characters, 0 for zero-width,
+        // 1 for normal width, and 2 for wide characters (CJK, emoji, etc.)
+        if (char_width < 0) {
+            // Non-printable or control character, treat as width 0
+            char_width = 0;
+        }
+        
+        total_width += char_width;
+        i += bytes;
+    }
+    
+    return total_width;
 }
 
 std::vector<std::string> TerminalUI::center_content_vertically(
@@ -227,11 +334,11 @@ std::string TerminalUI::render_split_layout(
         const auto& left = left_lines[i];
         const auto& right = right_lines[i];
         
-        // Strip ANSI codes for length calculation
-        std::string left_visible = strip_ansi(left);
+        // Calculate actual display width (accounting for wide characters like emojis)
+        int left_visible_width = display_width(left);
         
         // Pad left to fill width
-        int left_padding = left_width - left_visible.length();
+        int left_padding = left_width - left_visible_width;
         std::string left_padded = left;
         if (left_padding > 0) {
             left_padded += std::string(left_padding, ' ');

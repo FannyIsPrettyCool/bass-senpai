@@ -127,7 +127,15 @@ class ArtworkHandler:
                     # Middle chunks
                     output.append(f"\x1b_Gm=1;{chunk}\x1b\\")
             
-            return ''.join(output)
+            # Add newlines to move cursor down after image
+            # The image will be displayed at current cursor position
+            # We need to advance the cursor to account for the image height
+            result = ''.join(output)
+            # Text-art format has: 1 top border + height content + 1 bottom border = height+2 lines
+            # For Kitty, we put the image on the first line, then add empty lines to match
+            lines = [result]
+            lines.extend([''] * (height + 1))  # height + 1 to match text-art's height + 2 total
+            return '\n'.join(lines)
         
         except Exception as e:
             return ""
