@@ -116,6 +116,8 @@ std::string TerminalUI::strip_ansi(const std::string& text) {
 
 int TerminalUI::display_width(const std::string& text) {
     // Calculate actual display width accounting for wide characters (emojis, etc.)
+    // This is a simplified implementation that works for the emojis used in this app.
+    // For production use, consider using wcwidth library for full Unicode support.
     std::string clean_text = strip_ansi(text);
     
     int width = 0;
@@ -129,18 +131,17 @@ int TerminalUI::display_width(const std::string& text) {
             width += 1;
             i += 1;
         } else if ((c & 0xE0) == 0xC0) {
-            // 2-byte UTF-8 character
-            // Most 2-byte characters are 1 column, but some may be wide
+            // 2-byte UTF-8 character - typically 1 column
             width += 1;
             i += 2;
         } else if ((c & 0xF0) == 0xE0) {
             // 3-byte UTF-8 character
-            // Many emoji and CJK characters are here - assume 2 columns
-            // This is a simplification; proper handling would check Unicode tables
-            width += 2;
+            // Box drawing chars (╔═╗║╚╝), music symbols (♪), playback (▶⏸⏹): 1 column
+            // This works for the symbols used in this app
+            width += 1;
             i += 3;
         } else if ((c & 0xF8) == 0xF0) {
-            // 4-byte UTF-8 character (most emoji)
+            // 4-byte UTF-8 character (most emoji: 👤💿)
             // These are typically 2 columns wide
             width += 2;
             i += 4;
