@@ -126,7 +126,7 @@ int TerminalUI::display_width(const std::string& text) {
     size_t i = 0;
     
     while (i < clean_text.size()) {
-        // Decode UTF-8 character
+        // Decode UTF-8 character with validation
         wchar_t wc;
         int bytes = 1;
         
@@ -138,23 +138,68 @@ int TerminalUI::display_width(const std::string& text) {
             bytes = 1;
         } else if ((c & 0xE0) == 0xC0 && i + 1 < clean_text.size()) {
             // 2-byte UTF-8
-            wc = ((c & 0x1F) << 6) | (clean_text[i + 1] & 0x3F);
+            unsigned char c2 = clean_text[i + 1];
+            
+            // Validate continuation byte
+            if ((c2 & 0xC0) != 0x80) {
+                i += 1;  // Invalid sequence, skip first byte
+                continue;
+            }
+            
+            wc = ((c & 0x1F) << 6) | (c2 & 0x3F);
+            
+            // Reject overlong encodings (2-byte sequences must encode >= 0x80)
+            if (wc < 0x80) {
+                i += 1;  // Invalid overlong sequence
+                continue;
+            }
+            
             bytes = 2;
         } else if ((c & 0xF0) == 0xE0 && i + 2 < clean_text.size()) {
             // 3-byte UTF-8
-            wc = ((c & 0x0F) << 12) | 
-                 ((clean_text[i + 1] & 0x3F) << 6) | 
-                 (clean_text[i + 2] & 0x3F);
+            unsigned char c2 = clean_text[i + 1];
+            unsigned char c3 = clean_text[i + 2];
+            
+            // Validate continuation bytes
+            if ((c2 & 0xC0) != 0x80 || (c3 & 0xC0) != 0x80) {
+                i += 1;  // Invalid sequence
+                continue;
+            }
+            
+            wc = ((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+            
+            // Reject overlong encodings (3-byte sequences must encode >= 0x800)
+            if (wc < 0x800) {
+                i += 1;  // Invalid overlong sequence
+                continue;
+            }
+            
             bytes = 3;
         } else if ((c & 0xF8) == 0xF0 && i + 3 < clean_text.size()) {
             // 4-byte UTF-8
-            wc = ((c & 0x07) << 18) | 
-                 ((clean_text[i + 1] & 0x3F) << 12) | 
-                 ((clean_text[i + 2] & 0x3F) << 6) | 
-                 (clean_text[i + 3] & 0x3F);
+            unsigned char c2 = clean_text[i + 1];
+            unsigned char c3 = clean_text[i + 2];
+            unsigned char c4 = clean_text[i + 3];
+            
+            // Validate continuation bytes
+            if ((c2 & 0xC0) != 0x80 || (c3 & 0xC0) != 0x80 || (c4 & 0xC0) != 0x80) {
+                i += 1;  // Invalid sequence
+                continue;
+            }
+            
+            wc = ((c & 0x07) << 18) | ((c2 & 0x3F) << 12) | 
+                 ((c3 & 0x3F) << 6) | (c4 & 0x3F);
+            
+            // Reject overlong encodings (4-byte sequences must encode >= 0x10000)
+            // Also reject values > 0x10FFFF (maximum valid Unicode)
+            if (wc < 0x10000 || wc > 0x10FFFF) {
+                i += 1;  // Invalid overlong or out-of-range sequence
+                continue;
+            }
+            
             bytes = 4;
         } else {
-            // Invalid UTF-8, skip
+            // Invalid UTF-8 start byte, skip
             i += 1;
             continue;
         }
