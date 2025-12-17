@@ -114,6 +114,45 @@ std::string TerminalUI::strip_ansi(const std::string& text) {
     return std::regex_replace(text, ansi_pattern, "");
 }
 
+int TerminalUI::display_width(const std::string& text) {
+    // Calculate actual display width accounting for wide characters (emojis, etc.)
+    std::string clean_text = strip_ansi(text);
+    
+    int width = 0;
+    size_t i = 0;
+    while (i < clean_text.size()) {
+        unsigned char c = clean_text[i];
+        
+        // UTF-8 character width calculation
+        if (c < 0x80) {
+            // ASCII character - 1 byte, 1 column
+            width += 1;
+            i += 1;
+        } else if ((c & 0xE0) == 0xC0) {
+            // 2-byte UTF-8 character
+            // Most 2-byte characters are 1 column, but some may be wide
+            width += 1;
+            i += 2;
+        } else if ((c & 0xF0) == 0xE0) {
+            // 3-byte UTF-8 character
+            // Many emoji and CJK characters are here - assume 2 columns
+            // This is a simplification; proper handling would check Unicode tables
+            width += 2;
+            i += 3;
+        } else if ((c & 0xF8) == 0xF0) {
+            // 4-byte UTF-8 character (most emoji)
+            // These are typically 2 columns wide
+            width += 2;
+            i += 4;
+        } else {
+            // Invalid UTF-8 or continuation byte - skip
+            i += 1;
+        }
+    }
+    
+    return width;
+}
+
 std::vector<std::string> TerminalUI::center_content_vertically(
     const std::vector<std::string>& content_lines) 
 {
@@ -227,11 +266,11 @@ std::string TerminalUI::render_split_layout(
         const auto& left = left_lines[i];
         const auto& right = right_lines[i];
         
-        // Strip ANSI codes for length calculation
-        std::string left_visible = strip_ansi(left);
+        // Calculate actual display width (accounting for wide characters like emojis)
+        int left_visible_width = display_width(left);
         
         // Pad left to fill width
-        int left_padding = left_width - left_visible.length();
+        int left_padding = left_width - left_visible_width;
         std::string left_padded = left;
         if (left_padding > 0) {
             left_padded += std::string(left_padding, ' ');

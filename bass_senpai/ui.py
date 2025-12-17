@@ -2,6 +2,7 @@
 import sys
 import os
 import re
+import unicodedata
 from typing import Optional, Dict, Any, List
 
 # Constants
@@ -237,12 +238,11 @@ class TerminalUI:
         
         output = []
         for left, right in zip(left_lines, right_lines):
-            # Strip ANSI codes for length calculation
-            left_visible = self._strip_ansi(left)
-            right_visible = self._strip_ansi(right)
+            # Calculate actual display width (accounting for wide characters like emojis)
+            left_visible_width = self._display_width(left)
             
             # Pad left to fill width
-            left_padding = left_width - len(left_visible)
+            left_padding = left_width - left_visible_width
             if left_padding > 0:
                 left_padded = left + ' ' * left_padding
             else:
@@ -256,6 +256,30 @@ class TerminalUI:
         """Strip ANSI escape codes for length calculation."""
         ansi_escape = re.compile(r'\x1b\[[0-9;]*[mGKHfJ]|\x1b_G[^\\]*\x1b\\')
         return ansi_escape.sub('', text)
+    
+    def _display_width(self, text: str) -> int:
+        """Calculate the actual display width of text, accounting for wide characters.
+        
+        Wide characters (like emojis) take 2 terminal columns.
+        """
+        # First strip ANSI codes
+        clean_text = self._strip_ansi(text)
+        
+        width = 0
+        for char in clean_text:
+            # Check if character is wide (emoji, CJK characters, etc.)
+            # East Asian Width property: 'F' (Fullwidth), 'W' (Wide)
+            ea_width = unicodedata.east_asian_width(char)
+            if ea_width in ('F', 'W'):
+                width += 2
+            # Emoji modifier and variation selectors are often zero-width
+            elif unicodedata.category(char) in ('Mn', 'Me', 'Cf'):
+                # Mark, Nonspacing; Mark, Enclosing; Other, Format
+                width += 0
+            else:
+                width += 1
+        
+        return width
     
     def display(self, content: str):
         """Display content, replacing previous output efficiently."""

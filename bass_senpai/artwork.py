@@ -127,7 +127,17 @@ class ArtworkHandler:
                     # Middle chunks
                     output.append(f"\x1b_Gm=1;{chunk}\x1b\\")
             
-            return ''.join(output)
+            # Add newlines to move cursor down after image
+            # The image will be displayed at current cursor position
+            # We need to advance the cursor to account for the image height
+            result = ''.join(output)
+            # Add newlines equal to the number of terminal rows the image occupies
+            # Since we don't specify rows/cols, Kitty uses the current cell
+            # We need to return this as multi-line to match text-art format
+            # Return the image on the first line, then empty lines for the rest
+            lines = [result]
+            lines.extend([''] * height)
+            return '\n'.join(lines)
         
         except Exception as e:
             return ""
